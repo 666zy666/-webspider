@@ -1,22 +1,23 @@
 import execjs
 import time
+from concurrent.futures import  ThreadPoolExecutor
+import re
+
 with open("1.js", mode="r", encoding="utf-8") as f:
     exec_js = f.read()
 exec_code = execjs.compile(exec_js)
-d = time.time()
-d =str(round(d,3)).replace('.','')
-#
 
-i0x= {
-    "rid": "R_SO_4_2697934851",
-    "threadId": "R_SO_4_2697934851",
-    "pageNo": '2',
-    "pageSize": "20",
-    "cursor": d,
-    "offset": "0",
-    "orderType": "1",
-    "csrf_token": ""
-}
+# i0x= {
+#     "rid": "R_SO_4_2697934851",
+#     "threadId": "R_SO_4_2697934851",
+#     #页码
+#     "pageNo": num,
+#     "pageSize": "20",
+#     "cursor": d,
+#     "offset": "0",
+#     "orderType": "1",
+#     "csrf_token": ""
+# }
 
 import requests
 
@@ -61,15 +62,70 @@ headers = {
 params = {
     'csrf_token': '',
 }
+# d = time.time()
+# d =str(round(d,3)).replace('.','')
+# #
+# num = 1
+# i0x = {
+#         "rid": "R_SO_4_2697934851",
+#         "threadId": "R_SO_4_2697934851",
+#         # 页码
+#         "pageNo": num,
+#         "pageSize": "20",
+#         "cursor": d,
+#         "offset": "0",
+#         "orderType": "1",
+#         "csrf_token": ""
+#     }
+# data = exec_code.call("l", i0x)
+# data['params']=data.pop('encText')
+# response = requests.post(
+#         'https://music.163.com/weapi/comment/resource/comments/get?csrf_token=',
+#         params=params,
+#         cookies=cookies,
+#         headers=headers,
+#         data=data,
+#     )
+def func(i0x):
+    d = time.time()
+    d = str(round(d, 3)).replace('.', '')
+    #
+    i0x["cursor"]=d
+    data = exec_code.call("l", i0x)
+    data['params'] = data.pop('encText')
+    response = requests.post(
+        'https://music.163.com/weapi/comment/resource/comments/get?csrf_token=',
+        params=params,
+        cookies=cookies,
+        headers=headers,
+        data=data,
+    )
+    r = response.json()
+    obj = re.compile(r"'content': '(.*?)', 'richContent': (.*?), '")
+    res = obj.findall(str(r))
+    print(res)
 
-data = exec_code.call("l", i0x)
-data['params']=data.pop('encText')
 
-response = requests.post(
-    'https://music.163.com/weapi/comment/resource/comments/get?csrf_token=',
-    params=params,
-    cookies=cookies,
-    headers=headers,
-    data=data,
-)
-print(response.text)
+
+
+    # print(num, response.json())
+if __name__ == "__main__":
+    #多线程
+    with ThreadPoolExecutor(10) as t:
+        for num in range(1,100):
+            i0x = {
+                #歌曲id
+                "rid": "R_SO_4_2698782537",
+                #歌曲id
+                "threadId": "R_SO_4_2698782537",
+                # 页码
+                "pageNo": num,
+                "pageSize": "20",
+                "cursor": '',
+                "offset": "0",
+                "orderType": "1",
+                "csrf_token": ""
+            }
+            t.submit(func,i0x)
+
+
